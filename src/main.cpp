@@ -919,25 +919,20 @@ void loop() {
         delayMicroseconds(10);
     }
 
-    // Read Bi-Directional Switch input
-    if (digitalRead(BD_SW_CW) == ACTIVE) {
+    // Read Bi-Directional Switch input. Both edges are debounced: waiting for
+    // a *stable* release is what stops one flick from being read as two.
+    if (readSwitchPressed(BD_SW_CW)) {
         resetIdle();
         switchLayout(currentLayoutIndex + 1);
-        while (digitalRead(BD_SW_CW) == ACTIVE) {
-            delay(10);
-        }
-    } else if (digitalRead(BD_SW_CCW) == ACTIVE) {
+        waitForSwitchRelease(BD_SW_CW);
+    } else if (readSwitchPressed(BD_SW_CCW)) {
         resetIdle();
         switchLayout(currentLayoutIndex - 1);
-        while (digitalRead(BD_SW_CCW) == ACTIVE) {
-            delay(10);
-        }
-    } else if (digitalRead(BD_SW_PUSH) == ACTIVE) {
+        waitForSwitchRelease(BD_SW_CCW);
+    } else if (readSwitchPressed(BD_SW_PUSH)) {
         resetIdle();
         switchLayout(0);
-        while (digitalRead(BD_SW_PUSH) == ACTIVE) {
-            delay(10);
-        }
+        waitForSwitchRelease(BD_SW_PUSH);
     }
 
     readConfigButtons();
@@ -1091,6 +1086,43 @@ void updateKeymaps() {
 
     keymapsNeedsUpdate = false;
     configUpdated = true;
+}
+
+/**
+ * Debounced read of an INPUT_PULLUP switch's press edge
+ *
+ * Re-samples after a short settling delay so contact chatter or an electrical
+ * glitch cannot be mistaken for a deliberate press.
+ *
+ * @param {uint8_t} pin to read
+ * @return {bool} true if the pin is still active after settling
+ */
+bool readSwitchPressed(uint8_t pin) {
+    if (digitalRead(pin) != ACTIVE) {
+        return false;
+    }
+    delay(5);
+    return digitalRead(pin) == ACTIVE;
+}
+
+/**
+ * Block until a switch has read inactive continuously for SW_DEBOUNCE_MS
+ *
+ * Returning on the first inactive sample would land mid-bounce: loop() gets
+ * back around in ~1 ms, well inside a mechanical switch's release chatter, and
+ * would read the same flick a second time.
+ *
+ * @param {uint8_t} pin to wait on
+ */
+void waitForSwitchRelease(uint8_t pin) {
+    unsigned long stableSince = millis();
+    while (millis() - stableSince < SW_DEBOUNCE_MS) {
+        if (digitalRead(pin) == ACTIVE) {
+            // Still held, or still bouncing — restart the quiet period.
+            stableSince = millis();
+        }
+        delay(1);
+    }
 }
 
 void readConfigButtons() {
@@ -1324,6 +1356,11 @@ void switchLayout() {
 
 // overload switchLayout() to accept layout index as parameter
 void switchLayout(int layoutIndex) {
+    // No layers loaded (missing or unparseable config): wrapping would store
+    // layoutLength - 1 == -1 as 255 and index past the end of keyConfig.
+    if (layoutLength == 0) {
+        return;
+    }
     if (layoutIndex > layoutLength - 1) {
         layoutIndex = 0;
     } else if (layoutIndex < 0) {

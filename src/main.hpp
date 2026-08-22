@@ -41,6 +41,8 @@ using namespace std;
 #endif
 
 #define ACTIVE LOW
+// Mechanical contact bounce settles well inside this window.
+#define SW_DEBOUNCE_MS 25
 #define WAKEUP_KEY_BITMAP 0x1000  // Pin 12
 
 #define AP_SSID "Schnell Keypad WLAN"
@@ -128,6 +130,8 @@ void switchLayout(int layoutIndex);
 int findLayoutIndex(String layoutName);
 void switchDevice();
 void readConfigButtons();
+bool readSwitchPressed(uint8_t pin);
+void waitForSwitchRelease(uint8_t pin);
 
 // OLED Control
 void renderScreen();
