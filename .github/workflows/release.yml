@@ -32,9 +32,10 @@ jobs:
           restore-keys: ${{ runner.os }}-pio-
 
       - name: Install PlatformIO
-        # intelhex is imported by the esptool version pinned in platformio.ini.
-        # PlatformIO does not install esptool's dependencies, and esptool runs
-        # during a plain `pio run` (elf2image), so the build needs it too.
+        # Belt and braces for the esptool pinned in platformio.ini, which
+        # imports intelhex. PlatformIO's tool manager usually installs it, but
+        # it has been seen to skip that, and esptool runs during a plain
+        # `pio run` (elf2image), so a miss would break the build outright.
         run: pip install --upgrade platformio intelhex
 
       - name: Build firmware
