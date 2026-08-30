@@ -744,6 +744,17 @@ void loop() {
             return;
         }
 
+        // Software reset. The S3's native USB has no auto-reset circuit --
+        // DTR/RTS are not wired to EN/IO0 the way they are through a USB-UART
+        // bridge -- so esptool cannot reboot the board on its own. This gives
+        // the host a way to restart it without reaching for the button.
+        if (jsonString == "RESET") {
+            Serial.println("Restarting...");
+            Serial.flush();
+            delay(100);
+            ESP.restart();
+        }
+
         // WiFi read request: dump the currently stored SSID (password is never
         // sent back) so the configuration tool can pre-fill its WiFi form.
         if (jsonString == "READ_WIFI") {
