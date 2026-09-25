@@ -24,7 +24,7 @@ esac
 
 RELEASE_URL="https://github.com/$REPO/releases/tag/$TAG"
 # ?channel= preselects the matching build in the installer dropdown.
-INSTALLER_URL="https://blog.driftking.tw/Schnell-Keypad-Configuration-Tool/?channel=$SLUG"
+INSTALLER_URL="https://schnell.driftking.tw/config/?channel=$SLUG"
 
 if [ -n "${NOTE:-}" ]; then
   DESC="$NOTE"

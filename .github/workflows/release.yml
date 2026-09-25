@@ -79,8 +79,8 @@ jobs:
           fi
           bash scripts/announce-discord.sh
 
-      # Tell the web configuration tool to pull these release assets and
-      # redeploy GitHub Pages. Requires a PAT with write access to that repo
+      # Tell the web configuration tool to pull these release assets; its
+      # commit redeploys it on Cloudflare Pages. Requires a PAT with write access to that repo
       # stored as the WEB_TOOL_DISPATCH_TOKEN secret (GITHUB_TOKEN cannot
       # dispatch across repositories).
       - name: Notify configuration tool
