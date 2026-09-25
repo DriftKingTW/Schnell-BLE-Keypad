@@ -33,10 +33,17 @@ def merge_bin_action(target, source, env):
         "merge_bin",
         "-o",
         merged,
+        # Keep the flash parameters the bootloader was built with. esptool 4.5.1
+        # left a hash-appended bootloader untouched whatever was passed here,
+        # so released images always booted in DIO; newer esptool rewrites the
+        # header to the board's `qio`, and this board then fails to boot from
+        # the web installer (v1.1.0-beta.6).
         "--flash_mode",
-        board.get("build.flash_mode", "dio"),
+        "keep",
+        "--flash_freq",
+        "keep",
         "--flash_size",
-        board.get("upload.flash_size", "4MB"),
+        "keep",
         *flash_images,
         app_offset,
         firmware,
